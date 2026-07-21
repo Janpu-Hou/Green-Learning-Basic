@@ -261,3 +261,33 @@ def run_slm_multi_class_pipeline(train_path, test_path):
     
     categorical_cols = X_train_raw.select_dtypes(include=['object']).columns.tolist()
     X_combined = pd.concat([X_train_raw, X_test_raw], axis=0)
+
+
+
+
+X_combined_encoded = pd.get_dummies(X_combined, columns=categorical_cols, drop_first=True)
+X_train_numeric = X_combined_encoded.iloc[:len(X_train_raw)].values.astype(np.float64)
+X_test_numeric = X_combined_encoded.iloc[len(X_train_raw):].values.astype(np.float64)
+
+# --- Module 1: Unsupervised Representation learning ---
+print("\nStep 1: Commencing Tabular Saab Subspace Approximation...")
+saab = TabularSaabTransform(k_prime=0.95)
+X_train_rep = saab.fit_transform(X_train_numeric)
+X_test_rep = saab.transform(X_test_numeric)
+# --- Module 2: Supervised Feature selection ---
+print("\nStep 2: Executing Multi-Class Discriminant Feature Test (DFT)...")
+dft = MultiClassDiscriminantFeatureTest(percentile_threshold=70)
+X_train_features = dft.fit_transform(X_train_rep, y_train)
+X_test_features = dft.transform(X_test_rep)
+print(f" -> Input shapes matched to SLM Tree matrix: {X_train_features.shape}")
+# --- Module 3: Custom SLM Classifier Execution ---
+print("\nStep 3: Training Custom Subspace Learning Machine (SLM) Tree Architecture...")
+slm_tree = SLMTreeClassifier(max_depth=8, min_samples_split=10, num_proj_candidates=40, random_state=42)
+slm_tree.fit(X_train_features, y_train)predictions = slm_tree.predict(X_test_features)
+print("\n================ SLM TREE EVALUATION REPORT ================")
+print(f"Oblique SLM Pipeline Target Accuracy: {accuracy_score(y_test, predictions):.4f}")
+print(classification_report(y_test, predictions, target_names=label_encoder.classes_, zero_division=0))
+if name == "main":
+# Ensure correct data path configuration
+# run_slm_multi_class_pipeline("UNSW_NB15_training-set.csv", "UNSW_NB15_testing-set.csv")
+pass
