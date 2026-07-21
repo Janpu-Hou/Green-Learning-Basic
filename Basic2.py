@@ -1,3 +1,14 @@
+# To implement multi-class classification for predicting specific threat families 
+# (e.g., Exploits, Fuzzers, DoS, Reconnaissance, Normal), 
+# we need to shift our target label from the binary label column to the attack_cat column.
+# Because the UNSW-NB15 dataset represents benign traffic with blank spaces, NaN values, 
+# or the string 'Normal' depending on the file version, 
+# we must safely standardize the column, encode the labels numerically, 
+# and adapt our Discriminant Feature Test (DFT) module 
+# to evaluate multi-class weighted entropy.
+# Here is the updated complete pipeline designed to 
+# process, extract, select, and categorize structural threat classes:
+
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
