@@ -285,3 +285,46 @@ for df in [train_df, test_df]:
 label_encoder = LabelEncoder()
 y_train = label_encoder.fit_transform(train_df['attack_cat'])
 y_test = label_encoder.transform(test_df['attack_cat'])
+
+cols_to_drop = ['id', 'label', 'attack_cat']
+train_raw = train_df.drop(columns=[c for c in cols_to_drop if c in train_df.columns])
+X_test_raw = test_df.drop(columns=[c for c in cols_to_drop if c in test_df.columns])
+
+categorical_cols = X_train_raw.select_dtypes(include=['object']).columns.tolist()
+X_combined = pd.concat([X_train_raw, X_test_raw], axis=0)
+X_combined_encoded = pd.get_dummies(X_combined, columns=categorical_cols, drop_first=True)
+
+X_train_numeric = X_combined_encoded.iloc[:lenX_train_raw)].values.astype(np.float64)X_
+test_numeric = X_combined_encoded.iloc[len(X_train_raw):].values.astype(np.float64)
+
+# --- Module 1: Unsupervised Representation learning ---
+print("\nStep 1: Commencing Tabular Saab Subspace Approximation...")
+saab = TabularSaabTransform(k_prime=0.95)
+X_train_rep = saab.fit_transform(X_train_numeric)
+X_test_rep = saab.transform(X_test_numeric)
+
+# --- Module 2: Supervised Feature selection ---
+print("\nStep 2: Executing Multi-Class Discriminant Feature Test (DFT)...")
+dft = MultiClassDiscriminantFeatureTest(percentile_threshold=70)
+X_train_features = dft.fit_transform(X_train_rep, y_train)
+X_test_features = dft.transform(X_test_rep)
+
+# --- Module 3: Custom SLM Boost Classifier Execution ---
+print("\nStep 3: Training Custom Subspace Learning Machine (SLM) Boost Pipeline Architecture...")
+slm_boost = SLMBoostClassifier(n_estimators=15, learning_rate=0.1, max_depth=4, num_proj_candidates=30, random_state=42)
+slm_boost.fit(X_train_features, y_train)
+
+predictions = slm_boost.predict(X_test_features)
+print("\n================ SLM BOOST EVALUATION REPORT ================")
+print(f"Oblique SLM Boost Testing Pipeline Accuracy: {accuracy_score(y_test, predictions):.4f}")
+print(classification_report(y_test, predictions, target_names=label_encoder.classes_, zero_division=0))
+
+if name == "main":
+# run_slm_boost_pipeline("UNSW_NB15_training-set.csv", "UNSW_NB15_testing-set.csv")
+    pass
+
+
+### SLM Boost Operational Highlights:
+# * **Subspace Learning Regressor (SLR)**: Nodes calculate continuous target deviations rather than categorical counts. It fits residual values directly via hyperplane minimization to gradually lower loss variables across sequential rounds.
+# * **Additive Multi-Projection Layers**: Because every weak tree candidate explores a unique set of randomized multi-feature projection combinations (\(w\)), the final boosted combination naturally achieves strong ensemble generalization over localized or unseen cyber anomalies.
+
